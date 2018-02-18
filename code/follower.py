@@ -46,7 +46,13 @@ from io import BytesIO
 from scipy import misc
 
 from transforms3d.euler import euler2mat, mat2euler
-from tensorflow.contrib.keras.python import keras
+
+# For Tensorflow 1.2.1:
+# from tensorflow.contrib.keras.python import keras 
+
+# For Tensorflow 1.4.0 + Keras 2.0.8:
+import keras 
+
 from utils import separable_conv2d
 
 from utils import data_iterator

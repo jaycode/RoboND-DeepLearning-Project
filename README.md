@@ -155,7 +155,7 @@ Share your scores in slack, and keep a tally in a pinned message. Scores should 
 2. Launch the simulator, select "Spawn People", and then click the "Follow Me" button.
 3. Run the realtime follower script
 ```
-$ python follower.py my_amazing_model.h5
+$ python follower.py model_weights
 ```
 
 **Note:** If you'd like to see an overlay of the detected region on each camera frame from the drone, simply pass the `--pred_viz` parameter to `follower.py`
@@ -463,6 +463,10 @@ The evaluation score had gotten higher than the required 0.4 score, however, so 
 Score Weight: 0.73
 Final IoU: 0.549231793833
 Final Score: 0.400939209498
+
+And finally, the drone was able to follow our hero!
+
+![follow](./docs/misc/follow.png)
 
 ### Potential Improvement to The Network
 
