@@ -15,15 +15,23 @@
 
 # modified by Devin Anzelmo 2017
 
-from tensorflow.contrib.keras.python.keras import activations
-from tensorflow.contrib.keras.python.keras import backend as K
-from tensorflow.contrib.keras.python.keras import constraints
-from tensorflow.contrib.keras.python.keras import initializers
-from tensorflow.contrib.keras.python.keras import regularizers
-from tensorflow.contrib.keras.python.keras.engine import InputSpec
-from tensorflow.contrib.keras.python.keras.engine import Layer
-from tensorflow.contrib.keras.python.keras.utils.generic_utils import get_custom_objects 
-from tensorflow.contrib.keras.python.keras.utils import conv_utils
+# For Tensorflow 1.2.1:
+# from tensorflow.contrib.keras.python.keras import activations
+# from tensorflow.contrib.keras.python.keras import backend as K
+# from tensorflow.contrib.keras.python.keras import constraints
+# from tensorflow.contrib.keras.python.keras import initializers
+# from tensorflow.contrib.keras.python.keras import regularizers
+# from tensorflow.contrib.keras.python.keras.engine import InputSpec
+# from tensorflow.contrib.keras.python.keras.engine import Layer
+# from tensorflow.contrib.keras.python.keras.utils.generic_utils import get_custom_objects 
+# from tensorflow.contrib.keras.python.keras.utils import conv_utils
+
+# For Tensorflow 1.4.0 + Keras 2.0.8:
+from keras import activations, constraints, initializers, regularizers
+from keras import backend as K
+from keras.engine import InputSpec, Layer
+from keras.utils.generic_utils import get_custom_objects
+from keras.utils import conv_utils
 
 from tensorflow.python.layers import base
 from tensorflow.python.layers import utils

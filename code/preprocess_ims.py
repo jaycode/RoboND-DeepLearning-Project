@@ -34,7 +34,7 @@ import sys
 
 import numpy as np
 from scipy import misc
-
+import pdb
 
 def make_dir_if_not_exist(path):
     if not os.path.exists(path):
@@ -53,25 +53,32 @@ def get_mask_files(image_files):
 
 
 def move_labels(input_folder, output_folder, fold_id):
+    """ To remove unwanted images, simply remove images from cam1.
+    """
     files = glob.glob(os.path.join(input_folder, '*', '*.png'))
 
     output_folder = os.path.join(output_folder, 'masks')
     make_dir_if_not_exist(output_folder)
+
+    is_cam1 = lambda x: x.find('cam1_') != -1
+    cam1 = sorted(list(filter(is_cam1, files)))
+
     cam2, cam3, cam4 = get_mask_files(files) 
 
-    for e,i in enumerate(cam2):
+    for e,i in enumerate(cam1):
         fname_parts = i.split(os.sep)
+        name = fname_parts[-1]
 
         # Thanks @Nitish for these fixes:)
-        cam2_base = str(fold_id) + '_' + fname_parts[-3] +'_' + fname_parts[-1]
+        cam2_base = str(fold_id) + '_' + fname_parts[-3] +'_' + name[:3] + '2' + name[4:]
 
         fname_parts = cam3[e].split(os.sep)
-        cam3_base = str(fold_id) + '_' + fname_parts[-3] +'_' + fname_parts[-1]
+        cam3_base = str(fold_id) + '_' + fname_parts[-3] +'_' + name[:3] + '3' + name[4:]
 
         fname_parts = cam4[e].split(os.sep)
-        cam4_base = str(fold_id) + '_' + fname_parts[-3] +'_' + fname_parts[-1]
+        cam4_base = str(fold_id) + '_' + fname_parts[-3] +'_' + name[:3] + '4' + name[4:]
 
-        shutil.copy(i, os.path.join(output_folder,cam2_base))
+        shutil.copy(cam2[e], os.path.join(output_folder,cam2_base))
         shutil.copy(cam3[e], os.path.join(output_folder,cam3_base))
         shutil.copy(cam4[e], os.path.join(output_folder,cam4_base))
 

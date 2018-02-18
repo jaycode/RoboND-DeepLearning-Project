@@ -32,9 +32,14 @@ from glob import glob
 from scipy import misc
 
 import numpy as np
-from tensorflow.contrib.keras.python.keras.preprocessing.image import Iterator
-from tensorflow.contrib.keras.python.keras import backend as K
 
+# For Tensorflow 1.2.1
+# from tensorflow.contrib.keras.python.keras.preprocessing.image import Iterator
+# from tensorflow.contrib.keras.python.keras import backend as K
+
+# For Tensorflow 1.4.0 + Keras 2.0.8
+from keras.preprocessing.image import Iterator
+from keras import backend as K
 
 def preprocess_input(x):
     x = x/255.
