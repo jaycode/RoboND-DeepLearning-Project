@@ -223,6 +223,23 @@ Non-trainable params: 1,792
 ____________________________________________________________________________________________________
 ```
 
+#### Explanation of the network
+
+
+The network uses three downsampling encoders by using Separable Convolution layer with a stride of 2x2, followed by batch normalization between the layers. Batch normalization is useful to ensure that the model is able to learn *the model* of a distribution instead of the distribution itself. [This article](https://gab41.lab41.org/batch-normalization-what-the-hey-d480039a9e3b) explained this concept in a really good analogy:
+
+> For example, let’s say I’m hungry while I’m working. Everyday, Jane brings in Mac ‘n Cheese Hamburgers and Carrot Burgers. Also let’s say that Carrot Burgers look somewhat like Mac ‘n Cheese Burgers. Ted has never been exposed to Mac ‘n Cheese Hamburgers, so yesterday, I took him into the breakroom and point them out by describing them so that he can attempt to learn a function Ps(Y | X), the probability of Y being a Mac ‘n Cheese Burger given the features X. Here X are my descriptions like color, smell, etc. Essentially, I’ve trained Ted on a set of burgers S = { (X0, Y0), (X1, Y1), … } to recognize which Y burger to get, based on what Mac ‘n Cheese burgers look like, X.
+
+> Today, I’m busy, so I ask Ted to go get me a M&C burger. Since he knows what P (Y | X) is (or at least he thinks he does), I’m confident that although I know carrots are good for me, I won’t be eating them for lunch. Trouble is, Jane went to a different store today to pick up Mac ‘n Cheese & Carrot Burgers. Let’s call this set of burgers T, and the burgers in T look different than the original set of burgers S. Naturally Ted’s confused, even though he knows P (Y | X) = Ps(Y | X) = PT(Y | X). Why is he confused? Because Ps(X) ≠ PT(X): the source distribution is different than the target distribution. The ketchup is darker, the buns are lighter, and so on. In short, the feature space of T is drastically different than S, which was what was used in training.
+
+> Why does this matter? A great little explanation is here, but the general idea is that we’re not actually learning P(Y | X), but rather, the model of P(Y | X, θ), where θ are the parameters of that model. And since often times it’s difficult to specify the right model for a phenomenon (for deep learning, we’re pretty sure it’s never the right model), the distribution of the input, i.e. P(X), is important. To correct for the shift, a fix could be to re-train with points in S by weighting by PT(X) / Ps(X), or the perceived true distribution. 
+
+At the end of the downsampling layers, the network is then connected to a Fully Connected layer that is a one by one convolution with dimensional reduction to 64 filters (from the 128 filters in the input layer).
+
+And finally, it is then followed by three upsampling decoders implemented using bilinear upsampling with skip connections from the encoders between them. Within each decoder, two additional separable convolution layers were added to extract some more spatial information from prior layers.
+
+The network is topped by an additional one by one convolutions to reduce depth after concatenation and introduce additional non-linearities.
+
 
 Hyperparameters:
 
@@ -296,7 +313,7 @@ conv2d_4 (Conv2D)                (None, 160, 160, 3)   3459        up_sampling2d
 Total params: 159,518
 Trainable params: 158,238
 Non-trainable params: 1,280
-____________________________________
+____________________________________________________________________________________________________
 ```
 
 Hyperparameters:
@@ -362,3 +379,93 @@ I admit that I cheated a bit in collecting the data points. I printed out most o
 - I noticed that most images were taken at the paved road so I recorded many images from that area.
 - I set the drone to look at an exact scene then emulated an exact scene. This had resulted in a good prediction in that particular scene. Here is the scene in question:
   ![patrol4](./docs/misc/cheat1.png)
+
+### Setup #4 (Final model):
+
+I added about 1,000 new training data, but the final score did not get higher than 4.0. A more complex model would support a larger number of data points, so I increased the model complexity by adding another Separation Convolution Layer, which reverted the model back to the first model that I tried above:
+
+```
+____________________________________________________________________________________________________
+Layer (type)                     Output Shape          Param #     Connected to                     
+====================================================================================================
+input_2 (InputLayer)             (None, 160, 160, 3)   0                                            
+____________________________________________________________________________________________________
+separable_conv2d_6 (SeparableCon (None, 80, 80, 64)    283         input_2[0][0]                    
+____________________________________________________________________________________________________
+batch_normalization_7 (BatchNorm (None, 80, 80, 64)    256         separable_conv2d_6[0][0]         
+____________________________________________________________________________________________________
+separable_conv2d_7 (SeparableCon (None, 40, 40, 128)   8896        batch_normalization_7[0][0]      
+____________________________________________________________________________________________________
+batch_normalization_8 (BatchNorm (None, 40, 40, 128)   512         separable_conv2d_7[0][0]         
+____________________________________________________________________________________________________
+separable_conv2d_8 (SeparableCon (None, 20, 20, 128)   17664       batch_normalization_8[0][0]      
+____________________________________________________________________________________________________
+batch_normalization_9 (BatchNorm (None, 20, 20, 128)   512         separable_conv2d_8[0][0]         
+____________________________________________________________________________________________________
+conv2d_3 (Conv2D)                (None, 20, 20, 64)    73792       batch_normalization_9[0][0]      
+____________________________________________________________________________________________________
+batch_normalization_10 (BatchNor (None, 20, 20, 64)    256         conv2d_3[0][0]                   
+____________________________________________________________________________________________________
+up_sampling2d_4 (UpSampling2D)   (None, 40, 40, 64)    0           batch_normalization_10[0][0]     
+____________________________________________________________________________________________________
+concatenate_3 (Concatenate)      (None, 40, 40, 192)   0           up_sampling2d_4[0][0]            
+                                                                   batch_normalization_8[0][0]      
+____________________________________________________________________________________________________
+separable_conv2d_9 (SeparableCon (None, 40, 40, 128)   26432       concatenate_3[0][0]              
+____________________________________________________________________________________________________
+batch_normalization_11 (BatchNor (None, 40, 40, 128)   512         separable_conv2d_9[0][0]         
+____________________________________________________________________________________________________
+separable_conv2d_10 (SeparableCo (None, 40, 40, 128)   17664       batch_normalization_11[0][0]     
+____________________________________________________________________________________________________
+batch_normalization_12 (BatchNor (None, 40, 40, 128)   512         separable_conv2d_10[0][0]        
+____________________________________________________________________________________________________
+up_sampling2d_5 (UpSampling2D)   (None, 80, 80, 128)   0           batch_normalization_12[0][0]     
+____________________________________________________________________________________________________
+concatenate_4 (Concatenate)      (None, 80, 80, 192)   0           up_sampling2d_5[0][0]            
+                                                                   batch_normalization_7[0][0]      
+____________________________________________________________________________________________________
+separable_conv2d_11 (SeparableCo (None, 80, 80, 128)   26432       concatenate_4[0][0]              
+____________________________________________________________________________________________________
+batch_normalization_13 (BatchNor (None, 80, 80, 128)   512         separable_conv2d_11[0][0]        
+____________________________________________________________________________________________________
+separable_conv2d_12 (SeparableCo (None, 80, 80, 128)   17664       batch_normalization_13[0][0]     
+____________________________________________________________________________________________________
+batch_normalization_14 (BatchNor (None, 80, 80, 128)   512         separable_conv2d_12[0][0]        
+____________________________________________________________________________________________________
+up_sampling2d_6 (UpSampling2D)   (None, 160, 160, 128) 0           batch_normalization_14[0][0]     
+____________________________________________________________________________________________________
+conv2d_4 (Conv2D)                (None, 160, 160, 3)   3459        up_sampling2d_6[0][0]            
+====================================================================================================
+Total params: 195,870
+Trainable params: 194,078
+Non-trainable params: 1,792
+____________________________________________________________________________________________________
+```
+
+With the following hyperparameters:
+
+```
+learning_rate = 0.001
+batch_size = 16
+num_epochs = 20
+steps_per_epoch = 350
+validation_steps = 50
+```
+
+The validation curve did not look promising:
+
+![tcurves4](./docs/misc/tcurves4.png)
+
+But the training curve was lower than previous trainings. This is okay; I did not add any validation data from the newly added images, so it was kind of expected that the validation loss behaved erratically.
+
+The evaluation score had gotten higher than the required 0.4 score, however, so I am quite happy with the result:
+
+Score Weight: 0.73
+Final IoU: 0.549231793833
+Final Score: 0.400939209498
+
+### Potential Improvement to The Network
+
+A possible potential improvement to the network can be done by doing a more appropriate validation process. One that comes to mind is by updating the `preprocess_ims.py` script to split the produced data into training and validation sets. A k-fold cross-validation technique might also be useful here to avoid overfitting.
+
+With a more proper validation step, early stopping callback would also be useful. It is not currently useful since the validation scores do not well reflect test performances.
